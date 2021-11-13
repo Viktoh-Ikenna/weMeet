@@ -29,7 +29,7 @@ const control={
   export const MessageList=(state = [], action)=>{
     switch (action.type) {
       case "save_message":
-        return [...state,...action.payload];
+        return [...action.payload];
       case "save_one":
           return [...state,action.payload]
       default:

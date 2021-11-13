@@ -16,6 +16,7 @@ import axios from "axios";
 import io from 'socket.io-client'
 import { url } from "../../base";
 import { connect } from "react-redux";
+import { SSpinner } from "../spinner";
 
 
 // const CONNECTION_PORT = "http://localhost:4000/";
@@ -153,7 +154,7 @@ console.log('logged',checkLogged)
           {checkLogged.state===false?
             <Redirect
             to="/login"
-          />:(checkLogged.state===true?  <Home />:<div>loaddingsssssssssssssssss</div>)
+          />:(checkLogged.state===true?  <Home />:<SSpinner/>)
           }
         </Route>
         <Route path="/login">
@@ -161,14 +162,14 @@ console.log('logged',checkLogged)
           {checkLogged.state===true?
             <Redirect
             to="/"
-          />:(checkLogged.state===false? <Login />:<div>loaddingssssssssssss</div>)
+          />:(checkLogged.state===false? <Login />:<SSpinner/>)
           }
         </Route>
         <Route path="/:RoomId">
           {checkLogged.state===false?
             <Redirect
             to="/login"
-          />:(checkLogged.state===true? <Room />:<div>loaddingssssssssssssssssssssss</div>)
+          />:(checkLogged.state===true? <Room />:<SSpinner/>)
           }
         </Route>
         <Route path="*">

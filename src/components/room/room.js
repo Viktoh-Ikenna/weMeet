@@ -12,8 +12,19 @@ import ChatContainer from "../chatContainer/ChatContainer";
 import { url } from "../../base";
 import Controls from "../controls";
 import { NoExist } from "./noExist";
-const CONNECTION_PORT = "http://localhost:4000/";
+const CONNECTION_PORT = `${url}/`;
 export let socket = io(CONNECTION_PORT);
+// export var peer = new Peer(undefined, {
+//   secure: true,
+//   host: "shielded-mesa-84382.herokuapp.com",
+//   port: 443,
+//   path: "/peerjs",
+//   // config: {'iceServers': [
+//   //   { url: 'stun:stun.l.google.com:19302' },
+//   //   { url: 'turn:homeo@turn.bistri.com:80', credential: 'homeo' }
+//   // ]}
+// });
+
 export var peer = new Peer(undefined, {
   host: "/",
   port: 4000,
@@ -23,7 +34,6 @@ export var peer = new Peer(undefined, {
   //   { url: 'turn:homeo@turn.bistri.com:80', credential: 'homeo' }
   // ]}
 });
-
 let connectedToPeer = false;
 let peerId = "";
 
@@ -40,9 +50,10 @@ export const Room = () => {
   const [messageSent, setmessageSent] = useState(0);
   const [upateparticipants, setupateparticipants] = useState(0);
   const [mute, setMute] = useState({ video: true, audio: false });
-const [invalidMeet, setinvalidMeet] = useState(true)
-const [invalidTimes, setInvalidTimes] = useState(0)
-const [renderInvalid, setrenderInvalid] = useState(false)
+  const [invalidMeet, setinvalidMeet] = useState(true);
+  const [invalidTimes, setInvalidTimes] = useState(0);
+  const [renderInvalid, setrenderInvalid] = useState(false);
+  const [reRender,setRerender]=useState(0)
   //selectors
   const userInfo = useSelector((state) => state.UnserInfor);
 
@@ -77,7 +88,6 @@ const [renderInvalid, setrenderInvalid] = useState(false)
       saveUser(response);
     })();
   }, []);
-  
 
   useEffect(() => {
     (async () => {
@@ -89,13 +99,12 @@ const [renderInvalid, setrenderInvalid] = useState(false)
       const response = await data.data;
       // console.log(response)
       if (response.data !== "invalid") {
-        setInvalidTimes(invalidTimes+1)
-        setinvalidMeet(false)
+        setInvalidTimes(invalidTimes + 1);
+        setinvalidMeet(false);
         updateParticipants(response.data.participant);
-        
       } else {
-        setinvalidMeet(true)
-        setrenderInvalid(true)
+        setinvalidMeet(true);
+        setrenderInvalid(true);
       }
     })();
   }, [upateparticipants]);
@@ -111,102 +120,102 @@ const [renderInvalid, setrenderInvalid] = useState(false)
     updateMessages();
   }, [messageSent]);
 
+
+
   useEffect(() => {
-    if(!invalidMeet&&invalidTimes===1){
+    if (!invalidMeet && invalidTimes === 1) {
       if (connectedToPeer) {
-        socket.emit("join-room", RoomId, peerId);
-        VideoSteam();
+        socket.emit("join-room", RoomId, peerId,true);
+        VideoSteam(true,true,false);
       }
-    }else{
-      
+    } else {
     }
-    
   }, [invalidMeet]);
   // console.log(USer_details)
+
+  
   useEffect(() => {
-    socket.on('disconnect',(reason)=>{
-console.log('i am disconeected')
-    })
+    socket.on("disconnect", (reason) => {
+      if(reason==="ping timeout"||reason==="transport close"){
+        socket.connect();
+      }
+      console.log("i am disconeected",reason);
+    });
   }, []);
 
-  let myVideoSteam;
-  const VideoSteam = async () => {
+
+
+
+
+  const VideoSteam = async (first,video,audio) => {
     const streams = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: false,
+      video: video,
+      audio: true,
     });
-    myVideoSteam = await streams;
-    // console.log(myVideoSteam.getAudioTracks());
-    // myVideoSteam.getAudioTracks()[0].enabled=mute.audio;
-    // console.log(myVideoSteam.getAudioTracks()[0])
-    addMyvideo(streams);
-    socket.on("user-connected", async (userId, socketID) => {
+
+ if(first){
+  addMyvideo(streams);
+ }
+
+    // console.log('mute.video',video)
+    socket.on("user-connected", async (userId, video) => {
+      // console.log('video',video)
+      removeExisting(userId,video)
       setupateparticipants(upateparticipants + 1);
 
       var call = peer.call(userId, streams);
       call.on("stream", function (remoteStream) {
-        addvideo(remoteStream,false,socketID);
+        addvideo(remoteStream,userId);
         // console.log(socketID)
       });
     });
   };
 
+  ////for display connectors video..
   const addvideo = (streams, options) => {
+    // console.log("options",options)
     const video = document.createElement("video");
     const div = document.createElement("div");
+    div.style.backgroundColor="black";
     video.srcObject = streams;
-    div.id = streams.id;
-    video.className = "z-50 max-w-64 max-h-64 border-2 border-bgray-900";
-    if (options) {
-      video.muted = true;
-    }
+    div.id = options;
+    video.className = "border-2 border-bgray-900";
+   
+    video.style.minWidth = "320px";
+    video.style.minHeight = "320px";
+    video.style.maxWidth = "100%";
+ 
 
-    // video.style.width="100%"
-    // video.style.height="100%"
-    if (document.querySelectorAll("#video >div").length === 1) {
-      document.querySelectorAll("#video >div").forEach((el) => {
-        el.classList.add("two_connectors");
-        div.classList.add("two_connectors");
-      });
-    } else if (document.querySelectorAll("#video >div").length > 1) {
-      document.querySelectorAll("#video >div").forEach((el) => {
-        el.classList.remove("two_connectors");
-        el.classList.add("more_connectors");
-        div.classList.remove("two_connectors");
-        div.classList.add("more_connectors");
-      });
-    }
     div.append(video);
     video.addEventListener("loadedmetadata", () => {
       video.play();
     });
-    document.getElementById("video").append(div);
+    document.getElementById("videoCotainerPlacing").append(div);
     setTimeout(() => {
-      // filterIt();
+      filterIt();
     }, 100);
   };
 
+  ////for display my personal vidoe..
   const addMyvideo = (streams) => {
+    document.getElementById("myvideoV").innerHTML="";
     const video = document.createElement("video");
- 
+
     video.srcObject = streams;
-    video.className = "border-2 border-bgray-900";
-      video.muted = true;
+    video.className = "z-50 max-w-64 max-h-64 border-2 border-bgray-900";
+    video.muted = true;
 
     video.addEventListener("loadedmetadata", () => {
       video.play();
     });
     document.getElementById("myvideoV").append(video);
-
+    setRerender(reRender+1)
   };
 
 
-
-
-
-
+  //filter duplicates
   const filterIt = () => {
-    var divs = document.querySelectorAll("#video >div");
+    var divs = document.querySelectorAll("#videoCotainerPlacing >div");
     var arrayOfUsedNames = [];
 
     for (var i = 0; i < divs.length; i++) {
@@ -220,7 +229,30 @@ console.log('i am disconeected')
     }
   };
 
-  ///answering a call
+
+
+
+  ////toggle audio or video//
+const removeExisting=(id,video)=>{
+  // console.log(id)
+ 
+  var divs = document.querySelectorAll("#videoCotainerPlacing >div");
+  divs.forEach(el=>{
+    if(el.id===id){
+      if(video){
+        el.getElementsByTagName('video')[0].classList.remove('hidden')
+      }else{
+        el.getElementsByTagName('video')[0].classList.add('hidden')
+      }
+      console.log(el)
+      
+      // document.querySelector('#videoCotainerPlacing').removeChild(el)
+    }
+  })
+}
+
+
+///answering a call
 
   var getUserMedia =
     navigator.getUserMedia ||
@@ -228,12 +260,12 @@ console.log('i am disconeected')
     navigator.mozGetUserMedia;
   peer.on("call", function (call) {
     getUserMedia(
-      { video: true, audio: false },
+      { video: mute.video, audio: true },
       function (stream) {
+        // console.log(call)
         call.answer(stream);
         call.on("stream", function (remoteStream) {
           addvideo(remoteStream);
-          
         });
       },
       function (err) {
@@ -364,7 +396,18 @@ console.log('i am disconeected')
       return { ...prev, audio: !mute.audio };
     });
   };
+  const handleMuteVideo = () => {
 
+    setMute((prev) => {
+      return { ...prev, video: !mute.video };
+    });
+    socket.emit("join-room", RoomId, peerId,!mute.video);
+    // console.log(mute.video)
+    VideoSteam(!mute.video,false);
+    // VideoSteam(false,false,false);
+    // socket.disconnect()
+
+  };
   return (
     <div className="w-screen h-screen bg-gray-400 main-container text-gray-50">
       <div>
@@ -386,9 +429,17 @@ console.log('i am disconeected')
               id="video"
               className="min-w-full overflow-y-hidden min-h-full max-h-full flex-wrap flex justify-evenly items-center relative"
             >
-          <div id="myvideoV" className=' absolute right-0 top-0 w-22 h-64 bg-red-400'></div>
-        <div className="videoCotainerPlacing w-full h-full absolute"></div>
-              <Controls state={mute} mute={handleMute} />
+              <div
+                id="myvideoV"
+                className="absolute right-0 top-0 w-22 h-64 z-20"
+              ></div>
+              <div
+                id="videoCotainerPlacing"
+                className="min-w-full max-w-full min-h-full max-h-full absolute flex-wrap flex items-center justify-center overflow-x-scroll"
+              ></div>
+              <Controls
+              handleVideo={handleMuteVideo}
+              state={mute} mute={handleMute} />
             </div>
           </div>
 

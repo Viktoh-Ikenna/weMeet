@@ -133,7 +133,7 @@ export const Login = () => {
             window.location.pathname='/'
           },100)
         } else {
-          const data = await axios.post("/google", user.reloadUserInfo);
+          const data = await axios.post(`${url}/google`, user.reloadUserInfo);
           const token = await data.data.token;
           // console.log('post',token)
           localStorage.setItem('token',token)

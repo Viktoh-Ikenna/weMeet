@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { connect } from "react-redux";
 import { BsFillMicMuteFill } from "react-icons/bs";
-const Controls = ({ Controls, state, SetControls, SetParticipants, mute }) => {
+const Controls = ({ Controls,handleVideo, state, SetControls, SetParticipants, mute }) => {
   const [options, setoptions] = useState(false)
 
 
@@ -62,20 +62,20 @@ const Controls = ({ Controls, state, SetControls, SetParticipants, mute }) => {
           </div>
           <span>Mute</span>
         </div>
-        <div className="videoToggle btn-blue text_disappear">
+        <div onClick={handleVideo} className="videoToggle btn-blue text_disappear">
           <div className="coverit w-full flex items-center justify-between">
             <div
               style={{ width: "90%" }}
               className=" flex items-center justify-center"
             >
-              <svg
+              {state.video?<svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-8 w-5 md:w-7"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
                 <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
-              </svg>
+              </svg>:'not'}
             </div>
 
             <div style={{ fontSize: "20px" }}>

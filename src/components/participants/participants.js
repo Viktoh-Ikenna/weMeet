@@ -3,7 +3,7 @@ import { connect, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 
 export const Participants = ({ participants, SetParticipants }) => {
-  const [possition, setPosition] = useState({ top: "0", left: "0" });
+  const [possition, setPosition] = useState({ top: "0px", left: "0px" });
   const ParticipantsList = useSelector((state) => state.ParticipantsList);
   const { RoomId } = useParams();
   const [copied, setcopied] = useState(false);
@@ -51,7 +51,7 @@ export const Participants = ({ participants, SetParticipants }) => {
       }}
       className={`particicont  ${
         !participants.participants && "hidden" 
-      } bg-white pr-8 px-4 mx-auto absolute z-20 shadow-lg inset-0 top-0 rounded-sm overflow-hidden w-full md:top-4/12 md:left-1/2 md:max-w-sm `}
+      } bg-white pr-8 px-4 absolute z-20 shadow-lg inset-0 top-0 rounded-sm overflow-hidden w-full md:top-4/12 md:left-1/2 md:max-w-lg `}
     >
       <div className="sm:flex sm:items-center relative px-2 py-4">
         <div
