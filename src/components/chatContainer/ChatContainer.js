@@ -22,7 +22,7 @@ const handlePopOut=()=>{
 
 
     return (
-        <div className={`md:${!Controls.chat&&'hidden'} md:relative rightcenter absolute ${Controls.chat&&'hidden'}  w-full z-50 h-screen md:w-3/12 md:z-0  h-screen border border-gray-300 bg-bgray-200  md:block`}>
+        <div style={{zIndex:'200'}} className={`md:${!Controls.chat&&'hidden'} md:relative rightcenter absolute ${Controls.chat&&'hidden'}  w-full z-50 h-screen md:w-3/12 md:z-0  h-screen border border-gray-300 bg-bgray-200  md:block`}>
         <div className="container h-full flex items-center justify-between flex-col">
           <div className="chatHeaders w-full h-12 flex justify-between border-b border-bgray-600">
             {/* <!-- options --> */}
@@ -45,7 +45,7 @@ const handlePopOut=()=>{
                   className="block px-4 py-2 text-sm capitalize text-gray-700 hover:bg-blue-500 hover:text-white">
                   Close
                 </div>
-                <div onClick={handlePopOut} id="chatPopUp" className="block px-4 py-2 text-sm capitalize text-gray-700 hover:bg-blue-500 hover:text-white">
+                <div onClick={handlePopOut} id="chatPopUp" className="block px-4 py-2 text-sm capitalize text-gray-700 hover:bg-blue-500 hover:text-white hidden md:block">
                   Pop Out
                 </div>
 

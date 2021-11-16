@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { connect } from "react-redux";
-import { BsFillMicMuteFill } from "react-icons/bs";
+import { BsFillMicMuteFill,BsFillCameraVideoOffFill } from "react-icons/bs";
+
+
+
 const Controls = ({ Controls,handleVideo, state, SetControls, SetParticipants, mute }) => {
   const [options, setoptions] = useState(false)
 
@@ -75,7 +78,7 @@ const Controls = ({ Controls,handleVideo, state, SetControls, SetParticipants, m
                 fill="currentColor"
               >
                 <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
-              </svg>:'not'}
+              </svg>:<BsFillCameraVideoOffFill className="h-8 w-5 md:w-7"/>}
             </div>
 
             <div style={{ fontSize: "20px" }}>

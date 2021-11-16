@@ -48,10 +48,11 @@ export const Participants = ({ participants, SetParticipants }) => {
       style={{
         top: `${possition.top}`,
         left: `${possition.left}`,
+        zIndex:'200'
       }}
       className={`particicont  ${
         !participants.participants && "hidden" 
-      } bg-white pr-8 px-4 absolute z-20 shadow-lg inset-0 top-0 rounded-sm overflow-hidden w-full md:top-4/12 md:left-1/2 md:max-w-lg `}
+      } bg-white pr-8 px-4 absolute z-20 shadow-lg  md:inset-x-1 top-0 bottom-0 md:bottom-20 rounded-sm overflow-hidden w-full md:top-4/12 md:left-1/2 md:max-w-lg `}
     >
       <div className="sm:flex sm:items-center relative px-2 py-4">
         <div

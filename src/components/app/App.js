@@ -69,23 +69,6 @@ console.log('logged',checkLogged)
 
 
 
-
-
-// ///scroll chas to view---------------------------------------
-// const chatCont = document.querySelectorAll('.chat_cont > div');
-// chatCont.forEach((el,i)=>{
-//   if(i===chatCont.length-1){
-// el.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
-//   }
-// })
-
-
-
-
-// ////--------for chat-----------------------------------//
-
-
-
 // ////for video onMouseOver ..............
 // const bottomlayer = document.querySelector('.bottomlayer');
 // setTimeout(() => {
@@ -109,43 +92,6 @@ console.log('logged',checkLogged)
 
 
 // //////////////////////for joining room/////////////////////////////////
-
-
-
-
-
-
-// ////////////////////////////////for participants movements and closing/////////////////////////////////
-// const particiCont =document.querySelector('.particicont');
-// const participant =document.querySelector('.participant')
-
-// const close_participantsMo =document.querySelector('.close_participantsMo')
-// particiCont.ondrag=function(e){
-
-
-  
-//   // console.log(this)
-//   if(window.event.clientX!==0){
-//     this.style.marginLeft=`${window.event.clientX}px`
-//     this.style.top=`${window.event.clientY}px`
-    
-//   }
-
-// }
-// particiCont.ondragstart=function(e){
-
-//   e.dataTransfer.setDragImage(this, 0, 0); 
-
-// }
-
-
-// close_participantsMo.onclick=()=>{
-//   particiCont.classList.add('hidden')
-// }
-// participant.onclick=()=>{
-//   particiCont.classList.remove('hidden')
-// }
-
   
   return (
     <Router>
@@ -158,6 +104,14 @@ console.log('logged',checkLogged)
           }
         </Route>
         <Route path="/login">
+          
+          {checkLogged.state===true?
+            <Redirect
+            to="/"
+          />:(checkLogged.state===false? <Login />:<SSpinner/>)
+          }
+        </Route>
+        <Route path="/signup">
           
           {checkLogged.state===true?
             <Redirect

@@ -14,26 +14,26 @@ import Controls from "../controls";
 import { NoExist } from "./noExist";
 const CONNECTION_PORT = `${url}/`;
 export let socket = io(CONNECTION_PORT);
-// export var peer = new Peer(undefined, {
-//   secure: true,
-//   host: "shielded-mesa-84382.herokuapp.com",
-//   port: 443,
-//   path: "/peerjs",
-//   // config: {'iceServers': [
-//   //   { url: 'stun:stun.l.google.com:19302' },
-//   //   { url: 'turn:homeo@turn.bistri.com:80', credential: 'homeo' }
-//   // ]}
-// });
-
 export var peer = new Peer(undefined, {
-  host: "/",
-  port: 4000,
+  secure: true,
+  host: "shielded-mesa-84382.herokuapp.com",
+  port: 443,
   path: "/peerjs",
   // config: {'iceServers': [
   //   { url: 'stun:stun.l.google.com:19302' },
   //   { url: 'turn:homeo@turn.bistri.com:80', credential: 'homeo' }
   // ]}
 });
+
+// export var peer = new Peer(undefined, {
+//   host: "/",
+//   port: 4000,
+//   path: "/peerjs",
+//   // config: {'iceServers': [
+//   //   { url: 'stun:stun.l.google.com:19302' },
+//   //   { url: 'turn:homeo@turn.bistri.com:80', credential: 'homeo' }
+//   // ]}
+// });
 let connectedToPeer = false;
 let peerId = "";
 
@@ -47,9 +47,10 @@ export const Room = () => {
   const { RoomId } = useParams();
   const messageInput = useRef();
 
+
   const [messageSent, setmessageSent] = useState(0);
   const [upateparticipants, setupateparticipants] = useState(0);
-  const [mute, setMute] = useState({ video: true, audio: false });
+  const [mute, setMute] = useState({ video: true, audio: true });
   const [invalidMeet, setinvalidMeet] = useState(true);
   const [invalidTimes, setInvalidTimes] = useState(0);
   const [renderInvalid, setrenderInvalid] = useState(false);
@@ -126,7 +127,10 @@ export const Room = () => {
     if (!invalidMeet && invalidTimes === 1) {
       if (connectedToPeer) {
         socket.emit("join-room", RoomId, peerId,true);
-        VideoSteam(true,true,false);
+        VideoSteam(true,true);
+      }else{
+        console.log(connectedToPeer)
+        window.location.reload(true)
       }
     } else {
     }
@@ -136,37 +140,50 @@ export const Room = () => {
   
   useEffect(() => {
     socket.on("disconnect", (reason) => {
-      if(reason==="ping timeout"||reason==="transport close"){
+    
         socket.connect();
-      }
+      
       console.log("i am disconeected",reason);
     });
   }, []);
 
+// console.log('peerid',peerId)
+
+useEffect(() => {
+  socket.on('removeVideo', function(id) {
+
+    removeVideo(id)
+  });
+}, []);
 
 
 
 
-  const VideoSteam = async (first,video,audio) => {
+
+
+
+  const VideoSteam = async (video,audio) => {
+// console.log(video,audio)
+
     const streams = await navigator.mediaDevices.getUserMedia({
       video: video,
-      audio: true,
+      audio: audio,
     });
+    
+//  console.log('Myvideo',video)
 
- if(first){
   addMyvideo(streams);
- }
-
+ 
     // console.log('mute.video',video)
-    socket.on("user-connected", async (userId, video) => {
-      // console.log('video',video)
-      removeExisting(userId,video)
+    socket.on("user-connected", async (userId, videoT,audioT) => {
+      // console.log('video',videoT)
+      removeExisting(userId,videoT,audioT)
       setupateparticipants(upateparticipants + 1);
-
+      console.log('peerdid',userId)
       var call = peer.call(userId, streams);
       call.on("stream", function (remoteStream) {
         addvideo(remoteStream,userId);
-        // console.log(socketID)
+        
       });
     });
   };
@@ -184,7 +201,10 @@ export const Room = () => {
     video.style.minWidth = "320px";
     video.style.minHeight = "320px";
     video.style.maxWidth = "100%";
- 
+    div.style.minWidth = "320px";
+    div.style.minHeight = "320px";
+    div.style.maxWidth = "100%";
+    div.classList.add('bg-bgray-200')
 
     div.append(video);
     video.addEventListener("loadedmetadata", () => {
@@ -233,7 +253,7 @@ export const Room = () => {
 
 
   ////toggle audio or video//
-const removeExisting=(id,video)=>{
+const removeExisting=(id,video,audio)=>{
   // console.log(id)
  
   var divs = document.querySelectorAll("#videoCotainerPlacing >div");
@@ -244,13 +264,31 @@ const removeExisting=(id,video)=>{
       }else{
         el.getElementsByTagName('video')[0].classList.add('hidden')
       }
-      console.log(el)
-      
+      if(audio){
+        el.getElementsByTagName('video')[0].muted=false
+      }else{
+        el.getElementsByTagName('video')[0].muted=true
+      }
       // document.querySelector('#videoCotainerPlacing').removeChild(el)
     }
   })
 }
 
+
+
+
+
+
+const removeVideo=(id)=>{
+ 
+  var divs = document.querySelectorAll("#videoCotainerPlacing >div");
+  divs.forEach(el=>{
+    if(el.id===id){
+     
+      document.querySelector('#videoCotainerPlacing').removeChild(el)
+    }
+  })
+}
 
 ///answering a call
 
@@ -262,10 +300,10 @@ const removeExisting=(id,video)=>{
     getUserMedia(
       { video: mute.video, audio: true },
       function (stream) {
-        // console.log(call)
+        // console.log(call.peer)
         call.answer(stream);
         call.on("stream", function (remoteStream) {
-          addvideo(remoteStream);
+          addvideo(remoteStream,call.peer);
         });
       },
       function (err) {
@@ -309,6 +347,7 @@ const removeExisting=(id,video)=>{
 
   const ForwardMessage = () => {
     let msgvalue = messageInput.current.value;
+    if(msgvalue!==""){
     const allData = {
       room: RoomId.replace(/\-/g, ""),
       name: userInfo.Email,
@@ -318,7 +357,7 @@ const removeExisting=(id,video)=>{
     };
     writeUserData(allData);
   };
-
+  }
   function writeUserData({ room, name, image, msg, visibility }) {
     // console.log({room,name,image,msg,visibility})
     set(
@@ -385,7 +424,8 @@ const removeExisting=(id,video)=>{
 
   ///////////////////events//////////////////
   const HandleInputClick = (e) => {
-    if (e.keyCode === 13) {
+    console.log(e.target.value.length)
+    if (e.keyCode === 13 && e.target.value !== "") {
       ForwardMessage();
     }
   };
@@ -395,15 +435,19 @@ const removeExisting=(id,video)=>{
     setMute((prev) => {
       return { ...prev, audio: !mute.audio };
     });
+
+    socket.emit("join-room", RoomId, peerId,mute.video,!mute.audio);
+
+    VideoSteam(true,!mute.audio);
   };
   const handleMuteVideo = () => {
 
     setMute((prev) => {
       return { ...prev, video: !mute.video };
     });
-    socket.emit("join-room", RoomId, peerId,!mute.video);
-    // console.log(mute.video)
-    VideoSteam(!mute.video,false);
+    socket.emit("join-room", RoomId, peerId,!mute.video,mute.audio);
+
+    VideoSteam(!mute.video,true);
     // VideoSteam(false,false,false);
     // socket.disconnect()
 

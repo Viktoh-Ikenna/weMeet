@@ -1,31 +1,34 @@
-import React from "react";
-import { initializeApp } from 'firebase/app';
+import React, { useRef, useState } from "react";
+import { initializeApp } from "firebase/app";
 import {
-    getAuth,
-    signInWithEmailAndPassword,
-    fetchSignInMethodsForEmail,
-    GithubAuthProvider,
-    signInWithPopup,
-    GoogleAuthProvider,
-    FacebookAuthProvider,
-  }  from "firebase/auth";
+  getAuth,
+  GithubAuthProvider,
+  signInWithPopup,
+  GoogleAuthProvider,
+  FacebookAuthProvider,
+} from "firebase/auth";
 import axios from "axios";
-import {url} from '../../base'
-  const firebaseConfig = {
-    apiKey: "AIzaSyA-ILzcrrsP34CHZBfXtXI_WW2VQOyWtCw",
-    authDomain: "zoom-clone-45244.firebaseapp.com",
-    projectId: "zoom-clone-45244",
-    storageBucket: "zoom-clone-45244.appspot.com",
-    messagingSenderId: "105769106199",
-    appId: "1:105769106199:web:c425e76f7c768a611c5552",
-    measurementId: "G-8YBTLD8SFB",
-  };
-
-
+import { url } from "../../base";
+import { Link, useLocation } from "react-router-dom";
+const firebaseConfig = {
+  apiKey: "AIzaSyA-ILzcrrsP34CHZBfXtXI_WW2VQOyWtCw",
+  authDomain: "zoom-clone-45244.firebaseapp.com",
+  projectId: "zoom-clone-45244",
+  storageBucket: "zoom-clone-45244.appspot.com",
+  messagingSenderId: "105769106199",
+  appId: "1:105769106199:web:c425e76f7c768a611c5552",
+  measurementId: "G-8YBTLD8SFB",
+};
 
 export const Login = () => {
-
-
+  const location = useLocation();
+  // console.log(location.pathname);
+  const fullName = useRef();
+  const email = useRef();
+  const password = useRef();
+  const [loading, setLoading] = useState(false);
+  const [error, seterror] = useState(false)
+  const [errorMsg, seterrorMsg] = useState('okay')
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
 
@@ -37,8 +40,8 @@ export const Login = () => {
     signInWithPopup(auth, provider)
       .then(async (result) => {
         // This gives you a Google Access Token. You can use it to access the Google API.
-        const credential = GoogleAuthProvider.credentialFromResult(result);
-        const token = credential.accessToken;
+        // const credential = GoogleAuthProvider.credentialFromResult(result);
+        // const token = credential.accessToken;
 
         // console.log('token',token)
         // The signed-in user info.
@@ -50,33 +53,36 @@ export const Login = () => {
         const checkedResult = await checkexisting.data;
         if (checkedResult.state === "existing") {
           const token = checkedResult.data;
-            // console.log('get',token);
-            localStorage.setItem('token',token)
-            setTimeout(()=>{
-              window.location.pathname='/'
-            },100)
+          // console.log('get',token);
+          localStorage.setItem("token", token);
+          setTimeout(() => {
+            window.location.pathname = "/";
+          }, 50);
         } else {
-          const data = await axios.post(`${url}/google`, user.reloadUserInfo);
+          const latest = user.reloadUserInfo;
+          latest.password = promptUserForPassword();
+          const data = await axios.post(`${url}/google`, latest);
           const token = await data.data.token;
-            console.log('post',token)
-            setTimeout(async()=>{
-                      window.location.pathname='/'
-            },2000)
+          console.log("post", token);
+          localStorage.setItem("token", token);
+          setTimeout(async () => {
+            window.location.pathname = "/";
+          }, 500);
         }
       })
       .catch((error) => {
         // Handle Errors here.
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        // The email of the user's account used.
-        const email = error.email;
-        // The AuthCredential type that was used.
-        const credential = GoogleAuthProvider.credentialFromError(error);
+        // const errorCode = error.code;
+        // const errorMessage = error.message;
+        // // The email of the user's account used.
+        // const email = error.email;
+        // // The AuthCredential type that was used.
+        // const credential = GoogleAuthProvider.credentialFromError(error);
         // ...
       });
   };
 
-//   ////.................for facebook signin.................//
+  //   ////.................for facebook signin.................//
   const FacebookProvider = new FacebookAuthProvider();
 
   const faceBookBtn = () => {
@@ -84,28 +90,27 @@ export const Login = () => {
     signInWithPopup(auth, FacebookProvider)
       .then((result) => {
         // The signed-in user info.
-        const user = result.user;
+        // const user = result.user;
 
         // This gives you a Facebook Access Token. You can use it to access the Facebook API.
         const credential = FacebookAuthProvider.credentialFromResult(result);
-        const accessToken = credential.accessToken;
+        // const accessToken = credential.accessToken;
         console.log(credential);
         // ...
       })
       .catch((error) => {
         // Handle Errors here.
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        // The email of the user's account used.
-        const email = error.email;
-        // The AuthCredential type that was used.
-        const credential = FacebookAuthProvider.credentialFromError(error);
-
+        // const errorCode = error.code;
+        // const errorMessage = error.message;
+        // // The email of the user's account used.
+        // const email = error.email;
+        // // The AuthCredential type that was used.
+        // const credential = FacebookAuthProvider.credentialFromError(error);
         // ...
       });
   };
 
-//   ////.................for Github signin.................//
+  //   ////.................for Github signin.................//
 
   const githubBtnprovider = new GithubAuthProvider();
 
@@ -114,32 +119,34 @@ export const Login = () => {
     signInWithPopup(auth, githubBtnprovider)
       .then(async (result) => {
         // This gives you a GitHub Access Token. You can use it to access the GitHub API.
-        const credential = GithubAuthProvider.credentialFromResult(result);
-        const token = credential.accessToken;
+        // const credential = GithubAuthProvider.credentialFromResult(result);
+        // const token = credential.accessToken;
 
         // The signed-in user info.
         const user = result.user;
-        console.log(user);
+
         const checkexisting = await axios.get(
           `${url}/google/${user.reloadUserInfo.localId}`
         );
         const checkedResult = await checkexisting.data;
         if (checkedResult.state === "existing") {
           const token = checkedResult.data;
-          localStorage.setItem('token',token)
+          localStorage.setItem("token", token);
           // console.log('get',token)
-          
-          setTimeout(()=>{
-            window.location.pathname='/'
-          },100)
+
+          setTimeout(() => {
+            window.location.pathname = "/";
+          }, 100);
         } else {
-          const data = await axios.post(`${url}/google`, user.reloadUserInfo);
+          const latest = user.reloadUserInfo;
+          latest.password = promptUserForPassword();
+          const data = await axios.post(`${url}/google`, latest);
           const token = await data.data.token;
           // console.log('post',token)
-          localStorage.setItem('token',token)
-          setTimeout(()=>{
-            window.location.pathname='/'
-          },100)
+          localStorage.setItem("token", token);
+          setTimeout(() => {
+            window.location.pathname = "/";
+          }, 100);
         }
 
         // ...
@@ -148,24 +155,110 @@ export const Login = () => {
         // Handle Errors here.
         const errorCode = error.code;
         console.log("erro", errorCode);
-        const errorMessage = error.message;
-        // The email of the user's account used.
-        const email = error.email;
-        // The AuthCredential type that was used.
-        const credential = GithubAuthProvider.credentialFromError(error);
+        // const errorMessage = error.message;
+        // // The email of the user's account used.
+        // const email = error.email;
+        // // The AuthCredential type that was used.
+        // const credential = GithubAuthProvider.credentialFromError(error);
         // ...
       });
   };
 
   function promptUserForPassword() {
     let password = prompt("password:", "");
-    if (password == null || password == "") {
+    if (password == null || password === "") {
       return "";
     } else {
       return password;
     }
   }
 
+
+
+
+
+
+
+  //HANDLING THE SIGNING IN & SINGING UP INPUTS AND SUBMISSION ///////////
+
+  const handleEmailSignin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    const dataSave = {
+      email: email.current.value,
+
+      photoUrl: "",
+      localId: `${Math.random(1000) * 10 * Math.random(0.5) * Math.random(17)}`,
+      password: password.current.value,
+    };
+
+
+    ////FOR THE SIGNING UP //////////////////////
+    if (location.pathname === "/signup") {
+      dataSave.displayName = fullName.current.value;
+      if (
+        dataSave.email !== "" &&
+        dataSave.displayName !== "" &&
+        dataSave.password !== ""
+      ) {
+        // console.log(dataSave);
+        const checkexisting = await axios.get(
+          `${url}/google-email/${dataSave.email}`
+        );
+        const checkedResult = await checkexisting.data;
+        if (checkedResult.state === "existing") {
+          seterrorMsg('Email already exists !. Login')
+          seterror(true)
+          setLoading(false);
+        } else {
+          const data = await axios.post(`${url}/google`, dataSave);
+          const token = await data.data.token;
+          localStorage.setItem("token", token);
+
+          setTimeout(async () => {
+            window.location.pathname = "/";
+          }, 200);
+          setLoading(false);
+        }
+      } else {
+        seterrorMsg('fill empty input')
+          seterror(true)
+        setLoading(false);
+      }
+    } else {
+    //////FOR SIGNIN //////////////////////////
+      if (dataSave.email !== "" && dataSave.password !== "") {
+        const checkexisting = await axios.post(
+          `${url}/loging-w-pass/`,
+          dataSave
+        );
+        const checkedResult = await checkexisting.data;
+        if (checkedResult.state === "existing") {
+          const token = checkedResult.token;
+          localStorage.setItem("token", token);
+          // console.log('get',token)
+
+          setTimeout(() => {
+            window.location.pathname = "/";
+          }, 100);
+          setLoading(false);
+        } else {
+          seterrorMsg('invalid credentials')
+          seterror(true)
+          setLoading(false);
+        }
+      } else {
+        seterrorMsg('fill empty input')
+          seterror(true)
+        setLoading(false);
+      }
+    }
+  };
+
+   //////FOR MINIMIZING ERROR //////////////////////////
+   const handleerror=()=>{
+    seterror(false)
+   }
   return (
     <div className="min-h-screen bg-white flex">
       <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
@@ -173,11 +266,11 @@ export const Login = () => {
           <div>
             <img
               className="h-12 w-auto"
-              src="https://tailwindui.com/img/logos/workflow-mark-indigo-600.svg"
+              src="https://mir-s3-cdn-cf.behance.net/projects/404/d5c4f1110250021.5fe86ed2122eb.jpg"
               alt="Workflow"
             />
             <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-              Sign in to your account
+              Sign {location.pathname === "/signup" ? "up" : "in"}
             </h2>
           </div>
 
@@ -185,7 +278,7 @@ export const Login = () => {
             <div>
               <div>
                 <p className="text-sm font-medium text-gray-700">
-                  Sign in with
+                  Sign {location.pathname === "/signup" ? "up" : "in"} with
                 </p>
 
                 <div className="mt-1 grid grid-cols-3 gap-3">
@@ -194,7 +287,10 @@ export const Login = () => {
                       className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                       id="faceBook"
                     >
-                      <span className="sr-only">Sign in with Facebook</span>
+                      <span className="sr-only">
+                        Sign {location.pathname === "/signup" ? "up" : "in"}{" "}
+                        with Facebook
+                      </span>
                       <svg
                         className="w-5 h-5"
                         fill="currentColor"
@@ -212,11 +308,14 @@ export const Login = () => {
 
                   <div>
                     <div
-                    onClick={githubBtn}
+                      onClick={githubBtn}
                       id="githubbtn"
                       className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                     >
-                      <span className="sr-only">Sign in with Github</span>
+                      <span className="sr-only">
+                        Sign {location.pathname === "/signup" ? "up" : "in"}{" "}
+                        with Github
+                      </span>
                       <svg
                         className="w-5 h-5"
                         fill="currentColor"
@@ -234,11 +333,14 @@ export const Login = () => {
 
                   <div>
                     <div
-                    onClick={handleGoogleBtn}
+                      onClick={handleGoogleBtn}
                       id="googleBtn"
                       className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                     >
-                      <span className="sr-only">Sign in with google</span>
+                      <span className="sr-only">
+                        Sign {location.pathname === "/signup" ? "up" : "in"}{" "}
+                        with google
+                      </span>
                       {/* <!-- for google --> */}
                       <svg
                         className="w-5 h-5"
@@ -267,9 +369,58 @@ export const Login = () => {
                 </div>
               </div>
             </div>
+            {
+                error&&(
+            <div
+            className="flex bg-red-100 rounded-lg p-4 mb-4 text-sm text-red-700"
+              role="alert"
+            >
+              <svg
+                className="w-5 h-5 inline mr-3"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clipRule="evenodd"
+                ></path>
+              </svg>
+          
+<div>
+                <span className="font-medium">{errorMsg}</span>
+              </div>
+              
+            </div>
+            )
+
+          }
 
             <div className="mt-6">
               <form action="#" method="POST" className="space-y-6">
+                {location.pathname === "/signup" && (
+                  <div>
+                    <label
+                      htmlFor="name"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Fullname
+                    </label>
+                    <div className="mt-1">
+                      <input
+                      onChange={handleerror}
+                        ref={fullName}
+                        id="name"
+                        name="name"
+                        type="text"
+                        autoComplete="none"
+                        required
+                        className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      />
+                    </div>
+                  </div>
+                )}
                 <div>
                   <label
                     htmlFor="email"
@@ -279,6 +430,8 @@ export const Login = () => {
                   </label>
                   <div className="mt-1">
                     <input
+                    onChange={handleerror}
+                      ref={email}
                       id="email"
                       name="email"
                       type="email"
@@ -298,6 +451,8 @@ export const Login = () => {
                   </label>
                   <div className="mt-1">
                     <input
+                    onChange={handleerror}
+                      ref={password}
                       id="password"
                       name="password"
                       type="password"
@@ -307,38 +462,77 @@ export const Login = () => {
                     />
                   </div>
                 </div>
+                {location.pathname !== "/signup" ? (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <input
+                        id="remember_me"
+                        name="remember_me"
+                        type="checkbox"
+                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                      />
+                      <label
+                        htmlFor="remember_me"
+                        className="ml-2 block text-sm text-gray-900"
+                      >
+                        Remember me
+                      </label>
+                    </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <input
-                      id="remember_me"
-                      name="remember_me"
-                      type="checkbox"
-                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                    />
-                    <label
-                      htmlFor="remember_me"
-                      className="ml-2 block text-sm text-gray-900"
-                    >
-                      Remember me
-                    </label>
-                  </div>
-
-                  <div className="text-sm">
-                    <div className="font-medium text-indigo-600 hover:text-indigo-500">
-                      Forgot your password?
+                    <div className="text-sm">
+                      <div className="font-medium text-indigo-600 hover:text-indigo-500">
+                        Forgot your password?
+                      </div>
                     </div>
                   </div>
-                </div>
-
+                ) : (
+                  ""
+                )}
                 <div>
                   <button
+                    onClick={handleEmailSignin}
                     type="submit"
-                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-bgray-600 hover:bg-bgray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bgray-500"
                   >
-                    Sign in
+                    {loading && (
+                      <div
+                        className="
+      loader1
+      ease-linear
+      rounded-full
+      border-8 border-t-8 border-gray-200
+      h-auto
+      w-auto
+      mx-4
+    "
+                      ></div>
+                    )}
+                    Sign {location.pathname === "/signup" ? "up" : "in"}
                   </button>
                 </div>
+                {location.pathname === "/signup" ? (
+                  <p className="text-sm text-center text-gray-400">
+                    Already have an account ?
+                    <Link
+                      to={`/login`}
+                      className="font-semibold text-indigo-500 focus:text-indigo-600 focus:outline-none focus:underline"
+                    >
+                      Sign in
+                    </Link>
+                    .
+                  </p>
+                ) : (
+                  <p className="text-sm text-center text-gray-400">
+                    Don&#x27;t have an account yet?
+                    <Link
+                      to={`/signup`}
+                      className="font-semibold text-indigo-500 focus:text-indigo-600 focus:outline-none focus:underline"
+                    >
+                      Sign up
+                    </Link>
+                    .
+                  </p>
+                )}
               </form>
             </div>
           </div>
