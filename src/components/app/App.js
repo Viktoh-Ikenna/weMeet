@@ -69,23 +69,6 @@ console.log('logged',checkLogged)
 
 
 
-// ////for video onMouseOver ..............
-// const bottomlayer = document.querySelector('.bottomlayer');
-// setTimeout(() => {
-//   bottomlayer.classList.add('hidden')
-// }, 15000);
-
-
-// const vSection = document.querySelector('.centerlater');
-// vSection.onmouseover=()=>{
-//   bottomlayer.classList.remove('hidden')
-// }
-// vSection.onmousemove=()=>{
-//   setTimeout(() => {
-//     bottomlayer.classList.remove('hidden')
-//   }, 60000);
-// }
-
 
 
 // ////////////////////////////////////////////////////////////////////////////////////////////////////////

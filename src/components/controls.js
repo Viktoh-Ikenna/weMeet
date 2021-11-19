@@ -1,12 +1,24 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { connect } from "react-redux";
 import { BsFillMicMuteFill,BsFillCameraVideoOffFill } from "react-icons/bs";
 
 
 
-const Controls = ({ Controls,handleVideo, state, SetControls, SetParticipants, mute }) => {
+const Controls = ({ Controls,display,setodisplay,handleVideo, state, SetControls, SetParticipants, mute }) => {
   const [options, setoptions] = useState(false)
 
+
+
+
+ useEffect(() => {
+  
+  let set = setTimeout(() => {
+    setodisplay(false)
+  }, 15000);
+   return () => {
+    clearTimeout(set)
+   }
+ }, [display])
 
   const handleoptionsMBL = () => {
     setoptions(!options);
@@ -17,10 +29,27 @@ const Controls = ({ Controls,handleVideo, state, SetControls, SetParticipants, m
   const handleParticipantShow = () => {
     SetParticipants();
   };
+
+
+
+////for video onMouseOver ..............
+
+
+
+// const vSection = document.querySelector('.centerlater');
+// vSection.onmouseover=()=>{
+//   setodisplay(true)
+// }
+// vSection.onmousemove=()=>{
+//   setTimeout(() => {
+//     bottomlayer.classList.remove('hidden')
+//   }, 60000);
+// }
+
   return (
     <div
       style={{ animation: "slideup .5s linear" }}
-      className="bottomlayer  max-h-20 absolute min-w-full bg-gray-800  bottom-0 flex items-center justify-between"
+      className={`${!display&&'hidden'} bottomlayer  max-h-20 absolute min-w-full bg-gray-800  bottom-0 flex items-center justify-between`}
     >
       <div className="md:px-8 leftbottom flex px-2 h-full items-center justify-center">
         <div onClick={mute} className="mic each btn-blue w-20 text_disappear">

@@ -14,26 +14,26 @@ import Controls from "../controls";
 import { NoExist } from "./noExist";
 const CONNECTION_PORT = `${url}/`;
 export let socket = io(CONNECTION_PORT);
-export var peer = new Peer(undefined, {
-  secure: true,
-  host: "shielded-mesa-84382.herokuapp.com",
-  port: 443,
-  path: "/peerjs",
-  // config: {'iceServers': [
-  //   { url: 'stun:stun.l.google.com:19302' },
-  //   { url: 'turn:homeo@turn.bistri.com:80', credential: 'homeo' }
-  // ]}
-});
-
 // export var peer = new Peer(undefined, {
-//   host: "/",
-//   port: 4000,
+//   secure: true,
+//   host: "shielded-mesa-84382.herokuapp.com",
+//   port: 443,
 //   path: "/peerjs",
 //   // config: {'iceServers': [
 //   //   { url: 'stun:stun.l.google.com:19302' },
 //   //   { url: 'turn:homeo@turn.bistri.com:80', credential: 'homeo' }
 //   // ]}
 // });
+
+export var peer = new Peer(undefined, {
+  host: "/",
+  port: 4000,
+  path: "/peerjs",
+  // config: {'iceServers': [
+  //   { url: 'stun:stun.l.google.com:19302' },
+  //   { url: 'turn:homeo@turn.bistri.com:80', credential: 'homeo' }
+  // ]}
+});
 let connectedToPeer = false;
 let peerId = "";
 
@@ -55,9 +55,15 @@ export const Room = () => {
   const [invalidTimes, setInvalidTimes] = useState(0);
   const [renderInvalid, setrenderInvalid] = useState(false);
   const [reRender,setRerender]=useState(0)
+  const [userCount,setuserCount]=useState(0)
+  const [display, setodisplay] = useState(true);
+
+
+
   //selectors
   const userInfo = useSelector((state) => state.UnserInfor);
-
+  const chatConatiner = useSelector((state) => state.Controls.chat);
+// console.log('chatConatiner',chatConatiner)
   //dispatchers /////////////////
   const Dispatch = useDispatch();
 
@@ -70,7 +76,9 @@ export const Room = () => {
   const updateParticipants = (list) => {
     Dispatch({ type: "update_participants", payload: list });
   };
-
+  const chatContainerShow = () => {
+    Dispatch({ type: "chat", payload: "" });
+  };
   // ||==============================================||
   // ||                                              ||
   // ||               mounting Effects          ||                   ||
@@ -177,9 +185,15 @@ useEffect(() => {
     // console.log('mute.video',video)
     socket.on("user-connected", async (userId, videoT,audioT) => {
       // console.log('video',videoT)
+
+      //FOR CALCULATING THE NUMBER USERS//////////////
+      
+
+      //REMOVING AN EXISTING USER //////////
       removeExisting(userId,videoT,audioT)
+
       setupateparticipants(upateparticipants + 1);
-      console.log('peerdid',userId)
+      // console.log('peerdid',userId)
       var call = peer.call(userId, streams);
       call.on("stream", function (remoteStream) {
         addvideo(remoteStream,userId);
@@ -191,20 +205,21 @@ useEffect(() => {
   ////for display connectors video..
   const addvideo = (streams, options) => {
     // console.log("options",options)
+   
     const video = document.createElement("video");
     const div = document.createElement("div");
-    div.style.backgroundColor="black";
+    
     video.srcObject = streams;
     div.id = options;
     video.className = "border-2 border-bgray-900";
    
-    video.style.minWidth = "320px";
-    video.style.minHeight = "320px";
-    video.style.maxWidth = "100%";
+    // video.style.minWidth = "full\\";
+    // video.style.minHeight = "320px";
+    // video.style.maxWidth = "100%";
     div.style.minWidth = "320px";
     div.style.minHeight = "320px";
-    div.style.maxWidth = "100%";
-    div.classList.add('bg-bgray-200')
+    div.style.maxWidth = "50%";
+    div.className='flex items-center justify-center';
 
     div.append(video);
     video.addEventListener("loadedmetadata", () => {
@@ -246,7 +261,9 @@ useEffect(() => {
       } else {
         divs[i].parentNode.removeChild(divs[i]);
       }
+      setuserCount(document.querySelectorAll("#videoCotainerPlacing >div").length)
     }
+   
   };
 
 
@@ -261,8 +278,10 @@ const removeExisting=(id,video,audio)=>{
     if(el.id===id){
       if(video){
         el.getElementsByTagName('video')[0].classList.remove('hidden')
+        el.classList.remove('bg-bgray-900')
       }else{
         el.getElementsByTagName('video')[0].classList.add('hidden')
+        el.classList.add('bg-bgray-900')
       }
       if(audio){
         el.getElementsByTagName('video')[0].muted=false
@@ -271,7 +290,9 @@ const removeExisting=(id,video,audio)=>{
       }
       // document.querySelector('#videoCotainerPlacing').removeChild(el)
     }
+    setuserCount(document.querySelector("#videoCotainerPlacing").length)
   })
+
 }
 
 
@@ -452,8 +473,49 @@ const removeVideo=(id)=>{
     // socket.disconnect()
 
   };
+
+/////////mobile touch functions/////////////////////////
+let per;
+const handlePointer=(evt)=>{
+  evt.preventDefault();
+  // console.log(evt.target)
+  // console.log(evt.touches[0].clientY)
+  per = (evt.touches[0].clientY/window.screen.height)*100
+  console.log('target',evt.target.id)
+  console.log('%',per)
+  if(evt.target.id==='chathead'){
+    document.querySelector('.rightcenter').style.top=`${per}%`
+  }
+}
+
+const handleDsiplayControl=(e)=>{
+  if(e.target.id==='videoCotainerPlacing'){
+    setodisplay(!display)
+  }
+}
+
+const handleTouchEnd=(e)=>{
+  // const it = (window.getComputedStyle(document.querySelector('.rightcenter')).top)
+  console.log('end',per)
+  if(per>40){
+    document.querySelector('.rightcenter').style.top="90%";
+    setTimeout(()=>{
+      chatContainerShow()
+      document.querySelector('.rightcenter').style.top="0%";
+    },150)
+  }else{
+    document.querySelector('.rightcenter').style.top='0%'
+  }
+
+}
+
+
+
+
+
+
   return (
-    <div className="w-screen h-screen bg-gray-400 main-container text-gray-50">
+    <div onTouchStart={handleDsiplayControl} onTouchEnd={handleTouchEnd} onTouchMove={handlePointer} className="w-screen h-screen bg-gray-400 main-container text-gray-50">
       <div>
         <div className="toplayer">
           <div className="lefttop"></div>
@@ -467,7 +529,7 @@ const removeVideo=(id)=>{
         />
         <NoExist reder={renderInvalid} />
         <Participants />
-        <div className="centerlater flex">
+        <div className="centerlater flex" onMouseMove={()=>{setodisplay(true)}}>
           <div className="videoSection h-screen flex-1">
             <div
               id="video"
@@ -475,13 +537,15 @@ const removeVideo=(id)=>{
             >
               <div
                 id="myvideoV"
-                className="absolute right-0 top-0 w-22 h-64 z-20"
+                className="absolute right-0 top-0 w-22 h-64 z-20 bg-bgray-900"
               ></div>
               <div
                 id="videoCotainerPlacing"
-                className="min-w-full max-w-full min-h-full max-h-full absolute flex-wrap flex items-center justify-center overflow-x-scroll"
+                className={`min-w-full max-w-full min-h-full max-h-full absolute justify-items-center items-center grid ${userCount>1&&userCount<5?'grid-cols-2':(userCount>4?'grid-cols-3':'grid-cols-1')} ${userCount>2&&userCount<7?'grid-row-2':(userCount>7?'grid-row-3':'grid-row-1')} gap-4 p-6 overflow-x-scroll`}
               ></div>
               <Controls
+              setodisplay={setodisplay}
+              display={display}
               handleVideo={handleMuteVideo}
               state={mute} mute={handleMute} />
             </div>
@@ -491,6 +555,7 @@ const removeVideo=(id)=>{
             keyup={HandleInputClick}
             inputRef={messageInput}
             sendMessage={ForwardMessage}
+          
           />
         </div>
       </div>

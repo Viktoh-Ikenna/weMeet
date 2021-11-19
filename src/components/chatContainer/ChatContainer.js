@@ -3,8 +3,8 @@ import { connect } from 'react-redux';
 import { ChatBody } from '../chatBody/chatBody';
 
 const ChatContainer = ({keyup,sendMessage,inputRef,Controls,SetControlsChat,SetControlsChatModal}) => {
-const [showToggle, setshowToggle] = useState(false)
 
+  const [showToggle, setshowToggle] = useState(false)
 
 
 
@@ -22,9 +22,9 @@ const handlePopOut=()=>{
 
 
     return (
-        <div style={{zIndex:'200'}} className={`md:${!Controls.chat&&'hidden'} md:relative rightcenter absolute ${Controls.chat&&'hidden'}  w-full z-50 h-screen md:w-3/12 md:z-0  h-screen border border-gray-300 bg-bgray-200  md:block`}>
-        <div className="container h-full flex items-center justify-between flex-col">
-          <div className="chatHeaders w-full h-12 flex justify-between border-b border-bgray-600">
+        <div id="chathead" style={{zIndex:'200',transition:'.1s ease-in-out all'}} className={`md:${!Controls.chat&&'hidden'} md:relative rightcenter absolute ${Controls.chat&&'hidden'}  w-full z-50 h-screen md:w-3/12 md:z-0  h-screen border border-gray-300 bg-bgray-200  md:block`}>
+        <div id="chathead" className="container h-full flex items-center justify-between flex-col">
+          <div id="chathead" className="chatHeaders w-full h-12 flex justify-between border-b border-bgray-600">
             {/* <!-- options --> */}
             <div className="h-full flex items-center justify-center">
             <div className="relative">
@@ -59,13 +59,13 @@ const handlePopOut=()=>{
 
 
 
-            <div className="flex-1 items-center">
-              <p className="h-full w-full flex justify-center items-center font-bold text-bgray-500">
+            <div id="chathead" className="flex-1 items-center">
+              <p id="chathead" className="h-full w-full flex justify-center items-center font-bold text-bgray-500">
                 chat
               </p>
             </div>
           </div>
-          <div className="chatbody  flex-1 w-full overflow-y-scroll">
+          <div id="chathead" className="chatbody  flex-1 w-full overflow-y-scroll">
             <ChatBody />
           </div>
           <div
