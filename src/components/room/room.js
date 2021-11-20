@@ -14,26 +14,26 @@ import Controls from "../controls";
 import { NoExist } from "./noExist";
 const CONNECTION_PORT = `${url}/`;
 export let socket = io(CONNECTION_PORT);
-// export var peer = new Peer(undefined, {
-//   secure: true,
-//   host: "shielded-mesa-84382.herokuapp.com",
-//   port: 443,
-//   path: "/peerjs",
-//   // config: {'iceServers': [
-//   //   { url: 'stun:stun.l.google.com:19302' },
-//   //   { url: 'turn:homeo@turn.bistri.com:80', credential: 'homeo' }
-//   // ]}
-// });
-
 export var peer = new Peer(undefined, {
-  host: "/",
-  port: 4000,
+  secure: true,
+  host: "shielded-mesa-84382.herokuapp.com",
+  port: 443,
   path: "/peerjs",
   // config: {'iceServers': [
   //   { url: 'stun:stun.l.google.com:19302' },
   //   { url: 'turn:homeo@turn.bistri.com:80', credential: 'homeo' }
   // ]}
 });
+
+// export var peer = new Peer(undefined, {
+//   host: "/",
+//   port: 4000,
+//   path: "/peerjs",
+//   // config: {'iceServers': [
+//   //   { url: 'stun:stun.l.google.com:19302' },
+//   //   { url: 'turn:homeo@turn.bistri.com:80', credential: 'homeo' }
+//   // ]}
+// });
 let connectedToPeer = false;
 let peerId = "";
 
@@ -47,23 +47,20 @@ export const Room = () => {
   const { RoomId } = useParams();
   const messageInput = useRef();
 
-
   const [messageSent, setmessageSent] = useState(0);
   const [upateparticipants, setupateparticipants] = useState(0);
   const [mute, setMute] = useState({ video: true, audio: true });
   const [invalidMeet, setinvalidMeet] = useState(true);
   const [invalidTimes, setInvalidTimes] = useState(0);
   const [renderInvalid, setrenderInvalid] = useState(false);
-  const [reRender,setRerender]=useState(0)
-  const [userCount,setuserCount]=useState(0)
+  const [reRender, setRerender] = useState(0);
+  const [userCount, setuserCount] = useState(0);
   const [display, setodisplay] = useState(true);
-
-
 
   //selectors
   const userInfo = useSelector((state) => state.UnserInfor);
   const chatConatiner = useSelector((state) => state.Controls.chat);
-// console.log('chatConatiner',chatConatiner)
+  // console.log('chatConatiner',userInfo)
   //dispatchers /////////////////
   const Dispatch = useDispatch();
 
@@ -129,75 +126,63 @@ export const Room = () => {
     updateMessages();
   }, [messageSent]);
 
-
-
   useEffect(() => {
     if (!invalidMeet && invalidTimes === 1) {
       if (connectedToPeer) {
-        socket.emit("join-room", RoomId, peerId,true);
-        VideoSteam(true,true);
-      }else{
-        console.log(connectedToPeer)
-        window.location.reload(true)
+        socket.emit("join-room", RoomId, peerId, true, true);
+        VideoSteam(true, true);
+      } else {
+        // console.log(connectedToPeer)
+        window.location.reload(true);
       }
     } else {
     }
   }, [invalidMeet]);
-  // console.log(USer_details)
 
-  
   useEffect(() => {
     socket.on("disconnect", (reason) => {
-    
-        socket.connect();
-      
-      console.log("i am disconeected",reason);
+      socket.connect();
+
+      console.log("i am disconeected", reason);
     });
   }, []);
 
-// console.log('peerid',peerId)
+  useEffect(() => {
+    socket.on("removeVideo", function (id) {
+      removeVideo(id);
+    });
+  }, []);
 
-useEffect(() => {
-  socket.on('removeVideo', function(id) {
+  useEffect(() => {
+    socket.on("updateNames", function (id, info) {
+      showName(id, info);
+    });
+  }, []);
 
-    removeVideo(id)
-  });
-}, []);
-
-
-
-
-
-
-
-  const VideoSteam = async (video,audio) => {
-// console.log(video,audio)
+  const VideoSteam = async (video, audio) => {
+    // console.log(video,audio)
 
     const streams = await navigator.mediaDevices.getUserMedia({
       video: video,
       audio: audio,
     });
-    
-//  console.log('Myvideo',video)
 
-  addMyvideo(streams);
- 
+    //  console.log('Myvideo',video)
+
+    addMyvideo(streams);
+
     // console.log('mute.video',video)
-    socket.on("user-connected", async (userId, videoT,audioT) => {
-      // console.log('video',videoT)
-
+    socket.on("user-connected", async (userId, videoT, audioT) => {
       //FOR CALCULATING THE NUMBER USERS//////////////
-      
 
       //REMOVING AN EXISTING USER //////////
-      removeExisting(userId,videoT,audioT)
+      removeExisting(userId, videoT, audioT);
 
       setupateparticipants(upateparticipants + 1);
       // console.log('peerdid',userId)
       var call = peer.call(userId, streams);
       call.on("stream", function (remoteStream) {
-        addvideo(remoteStream,userId);
-        
+        addvideo(remoteStream, userId);
       });
     });
   };
@@ -205,35 +190,44 @@ useEffect(() => {
   ////for display connectors video..
   const addvideo = (streams, options) => {
     // console.log("options",options)
-   
+    // http://localhost:3000/ef5d6682-b55a-4565-b549-66603d2639d2
+
     const video = document.createElement("video");
     const div = document.createElement("div");
-    
+
+    //hover element
+    const hover = document.createElement("div");
+    hover.className =
+      "nameshow absolute w-full bg-gray-900 bg-opacity-50 h-3/12 z-10 bottom-0 flex py-5 px-4 items-end justify-end text-lg text-gray-500";
+    hover.innerText = "";
+
     video.srcObject = streams;
     div.id = options;
-    video.className = "border-2 border-bgray-900";
-   
+    video.className = "border-2 border-bgray-900 flex-1 h-full";
+
     // video.style.minWidth = "full\\";
     // video.style.minHeight = "320px";
     // video.style.maxWidth = "100%";
     div.style.minWidth = "320px";
     div.style.minHeight = "320px";
-    div.style.maxWidth = "50%";
-    div.className='flex items-center justify-center';
+    div.style.maxWidth = "70%";
+    div.className = "flex items-center justify-center relative";
 
     div.append(video);
+    div.append(hover);
     video.addEventListener("loadedmetadata", () => {
       video.play();
     });
     document.getElementById("videoCotainerPlacing").append(div);
     setTimeout(() => {
       filterIt();
+      socket.emit("add-name", peerId, userInfo);
     }, 100);
   };
 
   ////for display my personal vidoe..
   const addMyvideo = (streams) => {
-    document.getElementById("myvideoV").innerHTML="";
+    document.getElementById("myvideoV").innerHTML = "";
     const video = document.createElement("video");
 
     video.srcObject = streams;
@@ -244,9 +238,8 @@ useEffect(() => {
       video.play();
     });
     document.getElementById("myvideoV").append(video);
-    setRerender(reRender+1)
+    setRerender(reRender + 1);
   };
-
 
   //filter duplicates
   const filterIt = () => {
@@ -261,57 +254,59 @@ useEffect(() => {
       } else {
         divs[i].parentNode.removeChild(divs[i]);
       }
-      setuserCount(document.querySelectorAll("#videoCotainerPlacing >div").length)
+      setuserCount(
+        document.querySelectorAll("#videoCotainerPlacing >div").length
+      );
     }
-   
   };
 
-
-
-
   ////toggle audio or video//
-const removeExisting=(id,video,audio)=>{
-  // console.log(id)
- 
-  var divs = document.querySelectorAll("#videoCotainerPlacing >div");
-  divs.forEach(el=>{
-    if(el.id===id){
-      if(video){
-        el.getElementsByTagName('video')[0].classList.remove('hidden')
-        el.classList.remove('bg-bgray-900')
-      }else{
-        el.getElementsByTagName('video')[0].classList.add('hidden')
-        el.classList.add('bg-bgray-900')
+  const removeExisting = (id, video, audio) => {
+    // console.log(id)
+
+    var divs = document.querySelectorAll("#videoCotainerPlacing >div");
+    divs.forEach((el) => {
+      if (el.id === id) {
+        if (video) {
+          el.getElementsByTagName("video")[0].classList.remove("hidden");
+          el.classList.remove("bg-bgray-900");
+        } else {
+          el.getElementsByTagName("video")[0].classList.add("hidden");
+          el.classList.add("bg-bgray-900");
+        }
+        if (audio) {
+          el.getElementsByTagName("video")[0].muted = false;
+        } else {
+          el.getElementsByTagName("video")[0].muted = true;
+        }
+        // document.querySelector('#videoCotainerPlacing').removeChild(el)
       }
-      if(audio){
-        el.getElementsByTagName('video')[0].muted=false
-      }else{
-        el.getElementsByTagName('video')[0].muted=true
+      setuserCount(document.querySelector("#videoCotainerPlacing").length);
+    });
+  };
+
+  const removeVideo = (id) => {
+    var divs = document.querySelectorAll("#videoCotainerPlacing >div");
+    divs.forEach((el) => {
+      if (el.id === id) {
+        document.querySelector("#videoCotainerPlacing").removeChild(el);
       }
-      // document.querySelector('#videoCotainerPlacing').removeChild(el)
-    }
-    setuserCount(document.querySelector("#videoCotainerPlacing").length)
-  })
+    });
+  };
 
-}
+  const showName = (id, info) => {
+    var divs = document.querySelectorAll("#videoCotainerPlacing >div");
+    divs.forEach((el) => {
+      if (el.id === id) {
+        // console.log('infor1',el)
+        el.querySelector(".nameshow").innerText = info.FullName
+          ? info.FullName
+          : "";
+      }
+    });
+  };
 
-
-
-
-
-
-const removeVideo=(id)=>{
- 
-  var divs = document.querySelectorAll("#videoCotainerPlacing >div");
-  divs.forEach(el=>{
-    if(el.id===id){
-     
-      document.querySelector('#videoCotainerPlacing').removeChild(el)
-    }
-  })
-}
-
-///answering a call
+  ///answering a call
 
   var getUserMedia =
     navigator.getUserMedia ||
@@ -319,12 +314,12 @@ const removeVideo=(id)=>{
     navigator.mozGetUserMedia;
   peer.on("call", function (call) {
     getUserMedia(
-      { video: mute.video, audio: true },
+      { video: true, audio: mute.audio },
       function (stream) {
         // console.log(call.peer)
         call.answer(stream);
         call.on("stream", function (remoteStream) {
-          addvideo(remoteStream,call.peer);
+          addvideo(remoteStream, call.peer);
         });
       },
       function (err) {
@@ -332,24 +327,6 @@ const removeVideo=(id)=>{
       }
     );
   });
-
-  // ///scroll chas to view---------------------------------------
-
-  ////for video onMouseOver ..............
-  // const bottomlayer = document.querySelector('.bottomlayer');
-  // setTimeout(() => {
-  //   bottomlayer.classNameList.add('hidden')
-  // }, 15000);
-
-  // const vSection = document.querySelector('.centerlater');
-  // vSection.onmouseover=()=>{
-  //   bottomlayer.classNameList.remove('hidden')
-  // }
-  // vSection.onmousemove=()=>{
-  //   setTimeout(() => {
-  //     bottomlayer.classNameList.remove('hidden')
-  //   }, 60000);
-  // }
 
   //////////inintialising  chat app now..
   const firebaseConfig = {
@@ -368,17 +345,17 @@ const removeVideo=(id)=>{
 
   const ForwardMessage = () => {
     let msgvalue = messageInput.current.value;
-    if(msgvalue!==""){
-    const allData = {
-      room: RoomId.replace(/\-/g, ""),
-      name: userInfo.Email,
-      image: userInfo.image,
-      msg: msgvalue,
-      visibility: "all",
-    };
-    writeUserData(allData);
+    if (msgvalue !== "") {
+      const allData = {
+        room: RoomId.replace(/\-/g, ""),
+        name: userInfo.Email,
+        image: userInfo.image,
+        msg: msgvalue,
+        visibility: "all",
+      };
+      writeUserData(allData);
+    }
   };
-  }
   function writeUserData({ room, name, image, msg, visibility }) {
     // console.log({room,name,image,msg,visibility})
     set(
@@ -445,7 +422,7 @@ const removeVideo=(id)=>{
 
   ///////////////////events//////////////////
   const HandleInputClick = (e) => {
-    console.log(e.target.value.length)
+    console.log(e.target.value.length);
     if (e.keyCode === 13 && e.target.value !== "") {
       ForwardMessage();
     }
@@ -457,65 +434,59 @@ const removeVideo=(id)=>{
       return { ...prev, audio: !mute.audio };
     });
 
-    socket.emit("join-room", RoomId, peerId,mute.video,!mute.audio);
+    socket.emit("join-room", RoomId, peerId, mute.video, !mute.audio);
 
-    VideoSteam(true,!mute.audio);
+    VideoSteam(true, !mute.audio);
   };
   const handleMuteVideo = () => {
-
     setMute((prev) => {
       return { ...prev, video: !mute.video };
     });
-    socket.emit("join-room", RoomId, peerId,!mute.video,mute.audio);
+    socket.emit("join-room", RoomId, peerId, !mute.video, mute.audio);
 
-    VideoSteam(!mute.video,true);
-    // VideoSteam(false,false,false);
-    // socket.disconnect()
-
+    VideoSteam(!mute.video, true);
+   
   };
 
-/////////mobile touch functions/////////////////////////
-let per;
-const handlePointer=(evt)=>{
-  evt.preventDefault();
-  // console.log(evt.target)
-  // console.log(evt.touches[0].clientY)
-  per = (evt.touches[0].clientY/window.screen.height)*100
-  console.log('target',evt.target.id)
-  console.log('%',per)
-  if(evt.target.id==='chathead'){
-    document.querySelector('.rightcenter').style.top=`${per}%`
-  }
-}
+  /////////mobile touch functions/////////////////////////
+  let per;
+  const handlePointer = (evt) => {
+    evt.preventDefault();
 
-const handleDsiplayControl=(e)=>{
-  if(e.target.id==='videoCotainerPlacing'){
-    setodisplay(!display)
-  }
-}
+    per = (evt.touches[0].clientY / window.screen.height) * 100;
 
-const handleTouchEnd=(e)=>{
-  // const it = (window.getComputedStyle(document.querySelector('.rightcenter')).top)
-  console.log('end',per)
-  if(per>40){
-    document.querySelector('.rightcenter').style.top="90%";
-    setTimeout(()=>{
-      chatContainerShow()
-      document.querySelector('.rightcenter').style.top="0%";
-    },150)
-  }else{
-    document.querySelector('.rightcenter').style.top='0%'
-  }
+    if (evt.target.id === "chathead") {
+      document.querySelector(".rightcenter").style.top = `${per}%`;
+    }
+  };
 
-}
+  const handleDsiplayControl = (e) => {
+    if (e.target.id === "videoCotainerPlacing") {
+      setodisplay(!display);
+    }
+  };
 
-
-
-
-
+  const handleTouchEnd = (e) => {
+    // const it = (window.getComputedStyle(document.querySelector('.rightcenter')).top)
+    // console.log('end',per)
+    if (per > 40) {
+      document.querySelector(".rightcenter").style.top = "90%";
+      setTimeout(() => {
+        chatContainerShow();
+        document.querySelector(".rightcenter").style.top = "0%";
+      }, 150);
+    } else {
+      document.querySelector(".rightcenter").style.top = "0%";
+    }
+  };
 
   return (
-    <div onTouchStart={handleDsiplayControl} onTouchEnd={handleTouchEnd} onTouchMove={handlePointer} className="w-screen h-screen bg-gray-400 main-container text-gray-50">
+    <div
+      onTouchStart={handleDsiplayControl}
+      onTouchEnd={handleTouchEnd}
+      onTouchMove={handlePointer}
+      className="w-screen h-screen bg-gray-400 main-container text-gray-50"
+    >
       <div>
         <div className="toplayer">
           <div className="lefttop"></div>
@@ -529,7 +500,12 @@ const handleTouchEnd=(e)=>{
         />
         <NoExist reder={renderInvalid} />
         <Participants />
-        <div className="centerlater flex" onMouseMove={()=>{setodisplay(true)}}>
+        <div
+          className="centerlater flex"
+          onMouseMove={() => {
+            setodisplay(true);
+          }}
+        >
           <div className="videoSection h-screen flex-1">
             <div
               id="video"
@@ -541,13 +517,27 @@ const handleTouchEnd=(e)=>{
               ></div>
               <div
                 id="videoCotainerPlacing"
-                className={`min-w-full max-w-full min-h-full max-h-full absolute justify-items-center items-center grid ${userCount>1&&userCount<5?'grid-cols-2':(userCount>4?'grid-cols-3':'grid-cols-1')} ${userCount>2&&userCount<7?'grid-row-2':(userCount>7?'grid-row-3':'grid-row-1')} gap-4 p-6 overflow-x-scroll`}
+                className={`min-w-full max-w-full min-h-full max-h-full absolute justify-items-center items-center grid ${
+                  userCount > 1 && userCount < 5
+                    ? "grid-cols-2"
+                    : userCount > 4
+                    ? "grid-cols-3"
+                    : "grid-cols-1"
+                } ${
+                  userCount > 2 && userCount < 7
+                    ? "grid-row-2"
+                    : userCount > 7
+                    ? "grid-row-3"
+                    : "grid-row-1"
+                } gap-4 p-6 overflow-x-scroll`}
               ></div>
               <Controls
-              setodisplay={setodisplay}
-              display={display}
-              handleVideo={handleMuteVideo}
-              state={mute} mute={handleMute} />
+                setodisplay={setodisplay}
+                display={display}
+                handleVideo={handleMuteVideo}
+                state={mute}
+                mute={handleMute}
+              />
             </div>
           </div>
 
@@ -555,7 +545,6 @@ const handleTouchEnd=(e)=>{
             keyup={HandleInputClick}
             inputRef={messageInput}
             sendMessage={ForwardMessage}
-          
           />
         </div>
       </div>
