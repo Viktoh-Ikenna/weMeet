@@ -1,15 +1,20 @@
 const control={
     chatModal:false,
     chat:true,
-    participants:false
+    participants:false,
+    meeting:false
     
   }
  export const Controls=(state = control, action)=>{
     switch (action.type) {
       case "chat":
         return {...state,chat:!state.chat}
+      case "chatCondition":
+          return {...state,chat:action.payload}
       case "chatModal":
         return {...state,chatModal:!state.chatModal}
+        case "LeaveMeeting":
+          return {...state,meeting:!state.meeting}
     case 'participants':
         return {...state,participants:!state.participants}
       default:

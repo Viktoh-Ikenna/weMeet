@@ -12,6 +12,7 @@ import ChatContainer from "../chatContainer/ChatContainer";
 import { url } from "../../base";
 import Controls from "../controls";
 import { NoExist } from "./noExist";
+import { EndModal } from "./endModal";
 const CONNECTION_PORT = `${url}/`;
 export let socket = io(CONNECTION_PORT);
 export var peer = new Peer(undefined, {
@@ -73,8 +74,8 @@ export const Room = () => {
   const updateParticipants = (list) => {
     Dispatch({ type: "update_participants", payload: list });
   };
-  const chatContainerShow = () => {
-    Dispatch({ type: "chat", payload: "" });
+  const chatContainerShow = (cond) => {
+    Dispatch({ type: "chatCondition", payload: cond });
   };
   // ||==============================================||
   // ||                                              ||
@@ -143,7 +144,7 @@ export const Room = () => {
     socket.on("disconnect", (reason) => {
       socket.connect();
 
-      console.log("i am disconeected", reason);
+      // console.log("i am disconeected", reason);
     });
   }, []);
 
@@ -472,7 +473,7 @@ export const Room = () => {
     if (per > 40) {
       document.querySelector(".rightcenter").style.top = "90%";
       setTimeout(() => {
-        chatContainerShow();
+        chatContainerShow(true);
         document.querySelector(".rightcenter").style.top = "0%";
       }, 150);
     } else {
@@ -492,7 +493,7 @@ export const Room = () => {
           <div className="lefttop"></div>
           <div className="righttop"></div>
         </div>
-
+<EndModal/>
         <ChatModal
           keyup={HandleInputClick}
           inputRef={messageInput}

@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { connect } from "react-redux";
+import { connect, useDispatch } from "react-redux";
 import { BsFillMicMuteFill,BsFillCameraVideoOffFill } from "react-icons/bs";
 
 
 
 const Controls = ({ Controls,display,setodisplay,handleVideo, state, SetControls, SetParticipants, mute }) => {
   const [options, setoptions] = useState(false)
+const dispatch = useDispatch();
+
 
 
 
@@ -31,21 +33,10 @@ const Controls = ({ Controls,display,setodisplay,handleVideo, state, SetControls
   };
 
 
-
-////for video onMouseOver ..............
-
-
-
-// const vSection = document.querySelector('.centerlater');
-// vSection.onmouseover=()=>{
-//   setodisplay(true)
-// }
-// vSection.onmousemove=()=>{
-//   setTimeout(() => {
-//     bottomlayer.classList.remove('hidden')
-//   }, 60000);
-// }
-
+const handleEnd=()=>{
+  dispatch({ type: "LeaveMeeting", payload: '' });
+}
+////
   return (
     <div
       style={{ animation: "slideup .5s linear" }}
@@ -323,7 +314,7 @@ const Controls = ({ Controls,display,setodisplay,handleVideo, state, SetControls
       </div>
 
       <div className="hidden md:flex rightbottom flex px-6 h-full items-center justify-center">
-        <div className="end endbtn">end</div>
+        <div onClick={handleEnd} className="end endbtn">end</div>
       </div>
     </div>
   );
